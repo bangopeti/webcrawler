@@ -1,10 +1,3 @@
-const isBiggerThanFive = (testNum) => testNum.count > 5;
-const test = {
-    count: 8,
-};
-console.log(isBiggerThanFive(test));
-console.log(isBiggerThanFive(test));
-console.log(isBiggerThanFive(test));
-console.log(isBiggerThanFive(test));
-export {};
+export const sum = (a, b) => a + b;
+console.log(sum(1, 3));
 //# sourceMappingURL=main.js.map
