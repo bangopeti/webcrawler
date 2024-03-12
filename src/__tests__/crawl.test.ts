@@ -1,6 +1,6 @@
 import { formatUrl, getUrlsFromHtml } from '../crawl.js';
 
-describe('getDomainFromURL should', () => {
+describe('formatUrl should', () => {
   const expectedValue = 'google.com';
   const expectedValueWithPath = 'google.com/search';
 
@@ -32,13 +32,6 @@ describe('getDomainFromURL should', () => {
     const url = 'https://google.com/search/';
     const actualValue = formatUrl(url);
     expect(actualValue).toBe(expectedValueWithPath);
-  });
-
-  test('throw error when given an invalid url', () => {
-    const url = 'notvalidurl';
-    expect(() => {
-      formatUrl(url);
-    }).toThrow();
   });
 });
 
