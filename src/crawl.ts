@@ -19,16 +19,16 @@ export const getUrlsFromHtml = (
   htmlBody: string
 ): string[] => {
   const domObj = new JSDOM(htmlBody);
-  const linkElementsFromHtml = domObj.window.document.querySelectorAll('a');
+  const anchorElementsFromHtml = domObj.window.document.querySelectorAll('a');
   const urls: string[] = [];
 
-  for (const linkElement of linkElementsFromHtml) {
+  for (const anchorElement of anchorElementsFromHtml) {
     try {
       let urlObj: URL;
-      if (linkElement.href.slice(0, 1) === '/') {
-        urlObj = new URL(`${webpageUrl}${linkElement.href}`);
+      if (anchorElement.href.slice(0, 1) === '/') {
+        urlObj = new URL(`${webpageUrl}${anchorElement.href}`);
       } else {
-        urlObj = new URL(linkElement.href);
+        urlObj = new URL(anchorElement.href);
       }
       urls.push(urlObj.href);
     } catch (error) {
@@ -41,29 +41,63 @@ export const getUrlsFromHtml = (
   return urls;
 };
 
-export const crawlPage = async (startUrl: string) => {
+interface CrawledPages {
+  [key: string]: number;
+}
+
+export const crawlPage = async (
+  baseUrl: string,
+  currentUrl: string,
+  crawledPages: CrawledPages
+): Promise<CrawledPages> => {
+  const baseUrlObj = new URL(baseUrl);
+  const currentUrlObj = new URL(currentUrl);
+
+  if (baseUrlObj.hostname !== currentUrlObj.hostname) {
+    return crawledPages;
+  }
+
+  const formattedCurrentUrl = formatUrl(currentUrl);
+  if (crawledPages[formattedCurrentUrl] > 0) {
+    crawledPages[formattedCurrentUrl]++;
+    return crawledPages;
+  }
+
+  console.log(`crawling ${currentUrl}`);
+
+  let htmlBody: string = '';
   try {
-    const resp: Response = await fetch(startUrl);
+    const resp: Response = await fetch(currentUrl);
 
     if (resp.status > 399) {
       console.log(
-        `error while fetching with status code: ${resp.status} on page: ${startUrl}`
+        `error while fetching with status code: ${resp.status} on page: ${currentUrl}`
       );
-      return;
+      return crawledPages;
     }
 
     const contentType = resp.headers.get('Content-Type');
     if (!contentType?.includes('text/html')) {
       console.log(
-        `not text/html response: ${contentType}, abort page crawl on: ${startUrl}`
+        `not text/html response: ${contentType}, abort page crawl on: ${currentUrl}`
       );
-      return;
+      return crawledPages;
+    } else {
+      crawledPages[formattedCurrentUrl] = 1;
     }
 
-    const htmlStr: string = await resp.text();
+    htmlBody = await resp.text();
   } catch (error) {
     console.log(
-      `error while fetching: ${(error as Error).message} on page: ${startUrl}`
+      `error while fetching: ${(error as Error).message} on page: ${currentUrl}`
     );
   }
+
+  const nextUrls: string[] = getUrlsFromHtml(baseUrl, htmlBody);
+
+  for (const nextUrl of nextUrls) {
+    crawledPages = await crawlPage(baseUrl, nextUrl, crawledPages);
+  }
+
+  return crawledPages;
 };
