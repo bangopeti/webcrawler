@@ -41,15 +41,15 @@ export const getUrlsFromHtml = (
   return urls;
 };
 
-interface CrawledPages {
+export interface ICrawledPages {
   [key: string]: number;
 }
 
 export const crawlPage = async (
   baseUrl: string,
   currentUrl: string,
-  crawledPages: CrawledPages
-): Promise<CrawledPages> => {
+  crawledPages: ICrawledPages
+): Promise<ICrawledPages> => {
   const baseUrlObj = new URL(baseUrl);
   const currentUrlObj = new URL(currentUrl);
 
